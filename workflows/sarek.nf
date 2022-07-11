@@ -273,9 +273,12 @@ include { MULTIQC                                              } from '../module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-ch_multiqc_config        = Channel.fromPath(file("$projectDir/assets/multiqc_config.yml", checkIfExists: true))
+ch_multiqc_config        = [
+                                file("$projectDir/assets/multiqc_config.yml", checkIfExists: true),
+                                file("$projectDir/assets/nf-core-sarek_logo_light.png", checkIfExists: true)
+                            ]
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
-ch_sarek_logo            = Channel.fromPath(file("$projectDir/assets/nf-core-sarek_logo_light.png", checkIfExists: true))
+//ch_sarek_logo            = Channel.fromPath(file("$projectDir/assets/nf-core-sarek_logo_light.png", checkIfExists: true))
 def multiqc_report = []
 
 /*
@@ -962,14 +965,16 @@ workflow SAREK {
         workflow_summary    = WorkflowSarek.paramsSummaryMultiqc(workflow, summary_params)
         ch_workflow_summary = Channel.value(workflow_summary)
 
-        ch_multiqc_files =  Channel.empty().mix(ch_version_yaml,
+        ch_multiqc_files =  Channel.empty().mix(
+                                            ch_version_yaml,
+                                            Channel.from(ch_multiqc_config),
                                             ch_multiqc_custom_config.collect().ifEmpty([]),
                                             ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
-                                            ch_reports.collect(),
-                                            ch_multiqc_config,
-                                            ch_sarek_logo)
+                                            ch_reports.collect()
+                                            )
 
-        MULTIQC(ch_multiqc_files.collect())
+
+        MULTIQC(ch_multiqc_files.collect(), ch_multiqc_config)
         multiqc_report = MULTIQC.out.report.toList()
     }
 }
