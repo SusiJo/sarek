@@ -748,8 +748,8 @@ workflow SAREK {
             cram_variant_calling_status_normal,
             [ [ id:'bwa' ], [] ], // bwa_index for tiddit; not used here
             cnvkit_reference,
-            dbsnp,
-            dbsnp_tbi,
+            dbsnp = (params.dbsnp) ? dbsnp.map{ it -> [[id:it[0].baseName], it] } : [[id: 'null'], []]
+            dbsnp_tbi = (params.dbsnp_tbi) ? dbsnp_tbi.map{ it -> [[id:it[0].baseName], it] } : [[id: 'null'], []]
             dbsnp_vqsr,
             dict,
             fasta,
